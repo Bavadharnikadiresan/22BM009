@@ -1,0 +1,47 @@
+import pandas as pd
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+
+# Sample raw dataset
+data = {
+    'Age': [25, 30, 45, None, 35],
+    'Salary': [50000, 60000, None, 80000, 120000],
+    'Gender': ['Male', 'Female', 'Female', 'Male', None],
+    'Department': ['HR', 'Engineering', 'Marketing', 'Engineering', 'HR']
+}
+
+df = pd.DataFrame(data)
+
+# Define feature columns
+numeric_features = ['Age', 'Salary']
+categorical_features = ['Gender', 'Department']
+
+# Numeric transformation pipeline: fill missing values, then scale
+numeric_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='mean')),
+    ('scaler', StandardScaler())
+])
+
+# Categorical transformation pipeline: fill missing values, then one-hot encode
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('encoder', OneHotEncoder(drop='first'))  # drop='first' to avoid multicollinearity
+])
+
+# Combine both pipelines
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_features),
+        ('cat', categorical_transformer, categorical_features)
+    ])
+
+# Apply transformation
+processed_data = preprocessor.fit_transform(df)
+
+# Convert processed data to DataFrame
+processed_df = pd.DataFrame(processed_data.toarray() if hasattr(processed_data, "toarray") else processed_data)
+
+print("Transformed Data:")
+print(processed_df)
